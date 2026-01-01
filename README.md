@@ -1,36 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💰 나만의 PWA 가계부 (MeMoney)
 
-## Getting Started
+> **Next.js 15 + Dexie.js(IndexedDB) + Tailwind CSS**로 제작된 설치형 웹 가계부입니다.
+> 서버 없이 브라우저 로컬 DB를 사용하여 개인정보가 안전하게 보호됩니다.
 
-First, run the development server:
+## 🚀 주요 기능
+- **PWA 지원**: 앱스토어 없이 홈 화면에 설치하여 앱처럼 사용 가능
+- **오프라인 우선**: 인터넷 연결 없이도 내역 입력 및 조회 가능
+- **시각화**: Recharts를 활용한 카테고리별 지출 통계 제공
+- **로컬 스토리지**: 모든 데이터는 사용자의 기기에만 저장 (Privacy First)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠 Tech Stack
+- **Framework**: Next.js 15 (App Router)
+- **Database**: Dexie.js (IndexedDB Wrapper)
+- **Styling**: Tailwind CSS
+- **Visualization**: Recharts
+- **Deployment**: Cloudflare Pages
+- **CI/CD**: GitHub Actions 기반 자동 배포
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📱 미리보기
+- **잔액 현황 카드**: 수입/지출 실시간 요약
+- **도넛 차트**: 카테고리별 지출 비율 확인
+- **내역 관리**: 메모가 포함된 상세 내역 리스트 및 삭제 기능
+- **데이터 내보내기/가져오기**: 로컬 데이터를 json 파일로 내보내고, 백업 json 파일을 가져오는 기능
