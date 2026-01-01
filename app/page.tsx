@@ -1,5 +1,6 @@
 "use client";
 
+import {useRouter} from "next/navigation";
 import {useState} from "react";
 import {db} from "@/lib/db";
 import {useLiveQuery} from "dexie-react-hooks";
@@ -23,6 +24,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 const DEFAULT_COLOR = '#CCCCCC';
 
 export default function Home() {
+    const router = useRouter();
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [amount, setAmount] = useState("");
     const [memo, setMemo] = useState("");
@@ -92,7 +95,7 @@ export default function Home() {
                 <div className="flex gap-2">
                     {/* 설정 아이콘 버튼 */}
                     <button
-                        onClick={() => alert('설정 메뉴(카테고리/자산 관리) 페이지로 이동하는 기능을 준비 중입니다!')}
+                        onClick={() => router.push("/settings")} // 알림창 대신 페이지 이동
                         className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -102,13 +105,6 @@ export default function Home() {
                                 d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
                     </button>
-                    <button onClick={exportData} className="text-xs bg-gray-200 px-2 py-1 rounded cursor-pointer">내보내기
-                    </button>
-                    <label
-                        className="text-xs bg-gray-200 px-2 py-1 rounded cursor-pointer flex items-center justify-center">
-                        가져오기
-                        <input type="file" accept=".json" onChange={importData} className="hidden"/>
-                    </label>
                     <button
                         onClick={() => setIsModalOpen(true)}
                         className="p-2 bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-md"
@@ -280,41 +276,4 @@ export default function Home() {
             )}
         </div>
     );
-}
-
-// 데이터 내보내기 함수
-const exportData = async () => {
-    const allData = await db.transactions.toArray();
-    const dataString = JSON.stringify(allData, null, 2);
-    const blob = new Blob([dataString], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `memoney-backup-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-}
-
-// 데이터 가져오기 함수
-const importData = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const json = JSON.parse(e.target?.result as string);
-
-            if (confirm("기존 데이터에 추가하시겠습니까? (중복 데이터가 생길 수 있습니다.)")) {
-                // ID를 제외하고 삽입 (Auto Increment를 위해)
-                const dataToImport = json.map(({id, ...rest}: any) => rest);
-                await db.transactions.bulkAdd(dataToImport);
-                alert("데이터를 성공적으로 가져왔습니다!");
-            }
-        } catch (err) {
-            alert("파일 형식이 올바르지 않습니다.");
-        }
-    };
-    reader.readAsText(file);
 }
