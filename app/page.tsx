@@ -88,8 +88,20 @@ export default function Home() {
     return (
         <div className="p-4 flex flex-col gap-6">
             <header className="flex justify-between items-center py-2">
-                <h1 className="text-xl font-bold">나의 가계부</h1>
+                <h1 className="text-2xl font-black text-gray-800">나의 가계부</h1>
                 <div className="flex gap-2">
+                    {/* 설정 아이콘 버튼 */}
+                    <button
+                        onClick={() => alert('설정 메뉴(카테고리/자산 관리) 페이지로 이동하는 기능을 준비 중입니다!')}
+                        className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </button>
                     <button onClick={exportData} className="text-xs bg-gray-200 px-2 py-1 rounded cursor-pointer">내보내기
                     </button>
                     <label
@@ -170,14 +182,25 @@ export default function Home() {
                     <ul>
                         {transactions?.map((t) => (
                             <li key={t.id}
-                                className="flex justify-between items-center p-3 border-b last:border-0 group">
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium">{t.category}</span>
-                                    <span
-                                        className="text-xs text-gray-400">{new Date(t.date).toLocaleDateString()}</span>
+                                className="flex justify-between items-center p-4 border-b last:border-0 active:bg-gray-50 transition-colors">
+                                <div className="flex flex-col gap-1">
+                                    {/* 카테고리 & 날짜 */}
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-bold text-gray-800">{t.category}</span>
+                                        <span className="text-[10px] text-gray-400 font-medium uppercase tracking-tighter">
+                                            {new Date(t.date).toLocaleDateString()}
+                                        </span>
+                                    </div>
+
+                                    {/* 메모 영역: 존재할 때만 렌더링 (Short-circuit evaluation) */}
+                                    {t.memo && (
+                                        <span className="text-xs text-gray-500 leading-relaxed italic">
+                                        {t.memo}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className={`font-bold ${t.type === 'income' ? 'text-blue-500' : 'text-red-500'}`}>
+                                    <span className={`font-bold text-base ${t.type === 'income' ? 'text-blue-600' : 'text-red-500'}`}>
                                       {t.type === 'income' ? '+' : '-'}{t.amount.toLocaleString()}원
                                     </span>
                                     {/* 삭제 버튼 */}
@@ -207,48 +230,48 @@ export default function Home() {
                 <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
                     <div className="bg-white w-full max-w-md rounded-t-3xl p-6 animate-slide-up">
                         <h2 className="text-lg font-bold mb-4">내역 추가</h2>
-                        {/* 카테고리 입력 부분 */}
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">카테고리</label>
-                            <select
-                                className="w-full p-3 bg-gray-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-                                value={newTransaction.category}
-                                onChange={(e) => setNewTransaction({...newTransaction, category: e.target.value})}
-                            >
-                                {CATEGORIES.map((cat) => (
-                                    <option key={cat} value={cat}>
-                                        {cat}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        {/* 입력 모달 내부 수정 */}
                         <div className="flex flex-col gap-4">
-                            <input
-                                type="number"
-                                placeholder="금액 입력"
-                                className="p-3 border rounded-xl outline-none focus:border-blue-500"
-                                value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                            />
+                            {/* 카테고리 & 금액 한 줄 배치 */}
+                            <div className="flex gap-2">
+                                <select
+                                    className="w-1/3 p-3 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                    value={newTransaction.category}
+                                    onChange={(e) => setNewTransaction({...newTransaction, category: e.target.value})}
+                                >
+                                    {CATEGORIES.map((cat) => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                                <div className="relative flex-1">
+                                    <input
+                                        type="number"
+                                        placeholder="금액 입력"
+                                        className="w-full p-3 pl-4 pr-10 border rounded-xl outline-none focus:border-blue-500 font-bold text-right"
+                                        value={amount}
+                                        onChange={(e) => setAmount(e.target.value)}
+                                    />
+                                    <span
+                                        className="absolute right-3 top-3.5 text-gray-400 text-sm font-medium">원</span>
+                                </div>
+                            </div>
+
+                            {/* 메모 입력 */}
                             <input
                                 type="text"
-                                placeholder="어디에 쓰셨나요? (메모)"
+                                placeholder="메모 입력(선택)"
                                 className="p-3 border rounded-xl outline-none focus:border-blue-500"
                                 value={memo}
                                 onChange={(e) => setMemo(e.target.value)}
                             />
+
+                            {/* 버튼 영역 */}
                             <div className="flex gap-2">
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="flex-1 p-3 bg-gray-100 rounded-xl font-medium"
-                                >
-                                    취소
+                                <button onClick={() => setIsModalOpen(false)}
+                                        className="flex-1 p-3 bg-gray-100 rounded-xl font-medium text-gray-600">취소
                                 </button>
-                                <button
-                                    onClick={handleSave}
-                                    className="flex-1 p-3 bg-blue-600 text-white rounded-xl font-medium"
-                                >
-                                    저장하기
+                                <button onClick={handleSave}
+                                        className="flex-2 p-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200">저장하기
                                 </button>
                             </div>
                         </div>
