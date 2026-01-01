@@ -62,7 +62,7 @@ export default function Home() {
             date: new Date().toISOString(),
             amount: Number(amount),
             category: newTransaction.category, //임시
-            type: 'expense',
+            type: newTransaction.category === '수입' ? 'income' : 'expense',
             memo: memo
         });
 
