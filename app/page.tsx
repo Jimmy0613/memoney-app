@@ -10,22 +10,58 @@ interface ChartData {
   value: number;
 }
 
+const CATEGORIES = ['식비', '교통', '쇼핑', '의료', '기타', '수입'];
+// 차트 색상 팔레트
+const CATEGORY_COLORS: Record<string, string> = {
+  '식비': '#FF6B6B',
+  '교통': '#4D96FF',
+  '쇼핑': '#FFD93D',
+  '의료': '#6BCB77',
+  '기타': '#929292'
+};
+
+const DEFAULT_COLOR = '#CCCCCC';
+
 export default function Home() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [amount, setAmount] = useState("");
     const [memo, setMemo] = useState("");
+    const [newTransaction, setNewTransaction] = useState({
+        amount: '',
+        category: CATEGORIES[0], // '식비'가 기본값으로 선택됨
+        type: 'expense' as 'expense' | 'income',
+        date: new Date().toISOString().split('T')[0],
+    });
 
     // DB에서 데이터 실시간 조회 (자바의 ObservableList 같은 느낌)
-    const transactions = useLiveQuery(() => db.transactions.reverse().toArray());
+    const transactions = useLiveQuery(() => db.transactions.toArray());
+
+    // 1. 수입 합계 계산
+    const totalIncome = transactions
+        ? transactions
+            .filter((t) => t.type === 'income')
+            .reduce((acc, cur) => acc + cur.amount, 0)
+        : 0;
+
+    // 2. 지출 합계 계산
+    const totalExpense = transactions
+        ? transactions
+            .filter((t) => t.type === 'expense')
+            .reduce((acc, cur) => acc + cur.amount, 0)
+        : 0;
+
 
     // 데이터 저장 함수
     const handleSave = async () => {
-        if (!amount || !memo) return alert("내용을 입력해주세요!");
+        if (!amount || isNaN(Number(amount))) {
+            alert("금액을 정확히 입력해주세요.");
+            return;
+        }
 
         await db.transactions.add({
-            date: new Date().toISOString().split('T')[0],
+            date: new Date().toISOString(),
             amount: Number(amount),
-            category: '식비', //임시
+            category: newTransaction.category, //임시
             type: 'expense',
             memo: memo
         });
@@ -49,9 +85,6 @@ export default function Home() {
         }, {})
     ) : [];
 
-    // 차트 색상 팔레트
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF'];
-
     return (
         <div className="p-4 flex flex-col gap-6">
             <header className="flex justify-between items-center py-2">
@@ -73,14 +106,32 @@ export default function Home() {
                 </div>
             </header>
 
-            {/* 잔액 요약 (나중에 실제 합계로 로직 추가) */}
-            <section className="bg-gradient-to-br from-blue-600 to-blue-400 p-6 rounded-2xl text-white shadow-md">
-                <p className="text-sm opacity-80">이번 달 사용 금액</p>
-                <h2 className="text-3xl font-bold mt-1">
-                    {transactions?.reduce((acc, cur) => acc + cur.amount, 0).toLocaleString()}원
-                </h2>
-            </section>
+            {/* 상단 대시보드 카드 */}
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-lg mb-6">
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <p className="text-blue-100 text-sm">전체 잔액</p>
+                        <h2 className="text-3xl font-bold mt-1">
+                            {(totalIncome - totalExpense).toLocaleString()}원
+                        </h2>
+                    </div>
+                    <div className="bg-white/20 p-2 rounded-lg backdrop-blur-md">
+                        💰
+                    </div>
+                </div>
 
+                <div className="flex gap-4 border-t border-white/20 pt-4 mt-2">
+                    <div className="flex-1">
+                        <p className="text-blue-200 text-xs">이번 달 수입</p>
+                        <p className="font-semibold text-lg">+{totalIncome.toLocaleString()}</p>
+                    </div>
+                    <div className="w-px bg-white/20 h-10"></div>
+                    <div className="flex-1 text-right">
+                        <p className="text-blue-200 text-xs text-right">이번 달 지출</p>
+                        <p className="font-semibold text-lg">-{totalExpense.toLocaleString()}</p>
+                    </div>
+                </div>
+            </div>
             {/* 차트 섹션 */}
             {chartData.length > 0 && (
                 <section className="bg-white p-4 rounded-2xl shadow-sm border">
@@ -98,7 +149,10 @@ export default function Home() {
                                     dataKey="value"
                                 >
                                     {chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={CATEGORY_COLORS[entry.name] || DEFAULT_COLOR}
+                                        />
                                     ))}
                                 </Pie>
                                 <Tooltip/>
@@ -113,17 +167,36 @@ export default function Home() {
             <section>
                 <h3 className="font-semibold mb-3 text-gray-500">최근 내역</h3>
                 <div className="flex flex-col gap-4">
-                    {transactions?.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center p-3 border-b">
-                            <div>
-                                <p className="font-medium">{item.memo}</p>
-                                <p className="text-xs text-gray-400">{item.date} · {item.category}</p>
-                            </div>
-                            <p className={item.type === 'expense' ? 'text-red-500 font-semibold' : 'text-blue-500 font-semibold'}>
-                                {item.type === 'expense' ? '-' : '+'}{item.amount.toLocaleString()}원
-                            </p>
-                        </div>
-                    ))}
+                    <ul>
+                        {transactions?.map((t) => (
+                            <li key={t.id}
+                                className="flex justify-between items-center p-3 border-b last:border-0 group">
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium">{t.category}</span>
+                                    <span
+                                        className="text-xs text-gray-400">{new Date(t.date).toLocaleDateString()}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className={`font-bold ${t.type === 'income' ? 'text-blue-500' : 'text-red-500'}`}>
+                                      {t.type === 'income' ? '+' : '-'}{t.amount.toLocaleString()}원
+                                    </span>
+                                    {/* 삭제 버튼 */}
+                                    <button
+                                        onClick={() => {
+                                            if (confirm('정말 삭제하시겠습니까?')) db.transactions.delete(t.id!);
+                                        }}
+                                        className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none"
+                                             viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                            <path strokeLinecap="round" strokeLinejoin="round"
+                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
                     {transactions?.length === 0 &&
                         <p className="text-center text-gray-400 py-10">내역이 없습니다. + 버튼을 눌러보세요!</p>}
                 </div>
@@ -134,6 +207,21 @@ export default function Home() {
                 <div className="fixed inset-0 bg-black/50 flex items-end justify-center z-50">
                     <div className="bg-white w-full max-w-md rounded-t-3xl p-6 animate-slide-up">
                         <h2 className="text-lg font-bold mb-4">내역 추가</h2>
+                        {/* 카테고리 입력 부분 */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">카테고리</label>
+                            <select
+                                className="w-full p-3 bg-gray-50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                                value={newTransaction.category}
+                                onChange={(e) => setNewTransaction({...newTransaction, category: e.target.value})}
+                            >
+                                {CATEGORIES.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                        {cat}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                         <div className="flex flex-col gap-4">
                             <input
                                 type="number"
